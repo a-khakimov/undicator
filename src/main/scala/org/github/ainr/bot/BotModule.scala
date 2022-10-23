@@ -3,6 +3,7 @@ package org.github.ainr.bot
 import cats.effect.IO
 import org.github.ainr.bot.conf.TelegramConfig
 import org.github.ainr.bot.handler.Handler
+import org.github.ainr.infrastructure.context.{Context, TrackingIdGen}
 import org.github.ainr.infrastructure.logger.CustomizedLogger
 import org.http4s.client.Client
 import telegramium.bots.high.{Api, BotApi, LongPollBot => TgLongPollBot}
@@ -17,7 +18,9 @@ object BotModule {
       config: TelegramConfig,
       httpClient: Client[IO]
   )(
-      logger: CustomizedLogger[IO]
+      context: Context,
+      logger: CustomizedLogger,
+      trackingIdGen: TrackingIdGen
   ): BotModule = new BotModule {
 
     private val botApi: Api[IO] = BotApi(
@@ -27,6 +30,7 @@ object BotModule {
 
     val handler: Handler = Handler(logger)
 
-    override def longPollBot: TgLongPollBot[IO] = LongPollBot.make(botApi, handler)(logger)
+    override def longPollBot: TgLongPollBot[IO] =
+      LongPollBot.make(botApi, handler)(context, logger, trackingIdGen)
   }
 }

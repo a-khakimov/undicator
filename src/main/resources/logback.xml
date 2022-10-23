@@ -22,7 +22,7 @@
             <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{dd.MM.yyyy HH:mm:ss.SSS} [%X{source}] [%thread] %-5level %logger{20} [clientId %X{clientId}] - %msg%n</pattern>
+            <pattern>%d{dd.MM.yyyy HH:mm:ss.SSS} [%X{source}] [trackingID %X{trackingID}] [%thread] [chatID %X{chatID}] %-5level %logger{20} - %msg%n</pattern>
         </encoder>
     </appender>
     <logger name="App" level="DEBUG" additivity="false">

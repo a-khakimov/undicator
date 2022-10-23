@@ -3,6 +3,7 @@ package org.github.ainr.schedule
 import cats.effect.IO
 import cats.syntax.all._
 import org.github.ainr.infrastructure.Scheduler.schedulerSyntax
+import org.github.ainr.infrastructure.context.TrackingIdGen
 import org.github.ainr.infrastructure.logger.CustomizedLogger
 
 import java.time.{LocalTime, ZoneId}
@@ -15,7 +16,10 @@ trait ScheduledTasks {
 
 object ScheduledTasks {
 
-  def apply(tasks: List[Task])(logger: CustomizedLogger[IO]): ScheduledTasks = {
+  def apply(tasks: List[Task])(
+      logger: CustomizedLogger,
+      trackingId: TrackingIdGen
+  ): ScheduledTasks = {
 
     new ScheduledTasks {
 
@@ -23,14 +27,14 @@ object ScheduledTasks {
         tasks
           .traverse {
             case task: OneDayShotTask =>
-              recovered {
+              trackingId.gen() *> recovered {
                 checkTaskTime(task.startTime).flatMap {
                   case moment: Boolean if moment => task.run
                   case _                         => IO.unit
                 }
               }
             case task: Task =>
-              recovered {
+              trackingId.gen() *> recovered {
                 task.run
               }
           }

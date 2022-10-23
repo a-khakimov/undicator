@@ -1,6 +1,6 @@
 package org.github.ainr.schedule
 
-import cats.effect.IO
+import org.github.ainr.infrastructure.context.TrackingIdGen
 import org.github.ainr.infrastructure.logger.CustomizedLogger
 import org.github.ainr.schedule.tasks.TestTask
 
@@ -11,14 +11,14 @@ trait ScheduledTasksModule {
 object ScheduledTasksModule {
 
   def apply(
-      implicit
-      logger: CustomizedLogger[IO]
+      logger: CustomizedLogger,
+      trackingId: TrackingIdGen
   ): ScheduledTasksModule = new ScheduledTasksModule {
 
     val tasks: List[Task] = List(
-      new TestTask
+      new TestTask(logger)
     )
 
-    override def scheduledTasks: ScheduledTasks = ScheduledTasks(tasks)(logger)
+    override def scheduledTasks: ScheduledTasks = ScheduledTasks(tasks)(logger, trackingId)
   }
 }

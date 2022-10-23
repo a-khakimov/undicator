@@ -2,14 +2,12 @@ package org.github.ainr.schedule.tasks
 
 import cats.effect.IO
 import org.github.ainr.infrastructure.logger.CustomizedLogger
-import org.github.ainr.schedule.{OneDayShotTask, Task}
+import org.github.ainr.schedule.Task
 
-import java.time.LocalTime
 import scala.language.postfixOps
 
 class TestTask(
-    implicit
-    logger: CustomizedLogger[IO]
+    logger: CustomizedLogger
 ) extends Task {
 
   override val name: String = "Test task"

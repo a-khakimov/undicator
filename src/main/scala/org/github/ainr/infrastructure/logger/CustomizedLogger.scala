@@ -1,322 +1,501 @@
 package org.github.ainr.infrastructure.logger
 
-import cats.effect.kernel.Sync
+import cats.effect.IO
+import org.github.ainr.infrastructure.context.Context
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 
-trait CustomizedLogger[F[_]] {
+trait CustomizedLogger {
 
   def trace(ctx: Map[String, String])(msg: => String)(
       implicit
       name: sourcecode.FullName,
       line: sourcecode.Line
-  ): F[Unit]
+  ): IO[Unit]
 
   def trace(ctx: Map[String, String], t: Throwable)(msg: => String)(
       implicit
       name: sourcecode.FullName,
       line: sourcecode.Line
-  ): F[Unit]
+  ): IO[Unit]
 
   def debug(ctx: Map[String, String])(msg: => String)(
       implicit
       name: sourcecode.FullName,
       line: sourcecode.Line
-  ): F[Unit]
+  ): IO[Unit]
 
   def debug(ctx: Map[String, String], t: Throwable)(msg: => String)(
       implicit
       name: sourcecode.FullName,
       line: sourcecode.Line
-  ): F[Unit]
+  ): IO[Unit]
 
   def info(ctx: Map[String, String])(msg: => String)(
       implicit
       name: sourcecode.FullName,
       line: sourcecode.Line
-  ): F[Unit]
+  ): IO[Unit]
 
   def info(ctx: Map[String, String], t: Throwable)(msg: => String)(
       implicit
       name: sourcecode.FullName,
       line: sourcecode.Line
-  ): F[Unit]
+  ): IO[Unit]
 
   def warn(ctx: Map[String, String])(msg: => String)(
       implicit
       name: sourcecode.FullName,
       line: sourcecode.Line
-  ): F[Unit]
+  ): IO[Unit]
 
   def warn(ctx: Map[String, String], t: Throwable)(msg: => String)(
       implicit
       name: sourcecode.FullName,
       line: sourcecode.Line
-  ): F[Unit]
+  ): IO[Unit]
 
   def error(ctx: Map[String, String])(msg: => String)(
       implicit
       name: sourcecode.FullName,
       line: sourcecode.Line
-  ): F[Unit]
+  ): IO[Unit]
 
   def error(ctx: Map[String, String], t: Throwable)(msg: => String)(
       implicit
       name: sourcecode.FullName,
       line: sourcecode.Line
-  ): F[Unit]
+  ): IO[Unit]
 
   def error(message: => String)(
       implicit
       name: sourcecode.FullName,
       line: sourcecode.Line
-  ): F[Unit]
+  ): IO[Unit]
 
   def warn(message: => String)(
       implicit
       name: sourcecode.FullName,
       line: sourcecode.Line
-  ): F[Unit]
+  ): IO[Unit]
 
   def info(message: => String)(
       implicit
       name: sourcecode.FullName,
       line: sourcecode.Line
-  ): F[Unit]
+  ): IO[Unit]
 
   def debug(message: => String)(
       implicit
       name: sourcecode.FullName,
       line: sourcecode.Line
-  ): F[Unit]
+  ): IO[Unit]
 
   def trace(message: => String)(
       implicit
       name: sourcecode.FullName,
       line: sourcecode.Line
-  ): F[Unit]
+  ): IO[Unit]
 
   def error(t: Throwable)(message: => String)(
       implicit
       name: sourcecode.FullName,
       line: sourcecode.Line
-  ): F[Unit]
+  ): IO[Unit]
 
   def warn(t: Throwable)(message: => String)(
       implicit
       name: sourcecode.FullName,
       line: sourcecode.Line
-  ): F[Unit]
+  ): IO[Unit]
 
   def info(t: Throwable)(message: => String)(
       implicit
       name: sourcecode.FullName,
       line: sourcecode.Line
-  ): F[Unit]
+  ): IO[Unit]
 
   def debug(t: Throwable)(message: => String)(
       implicit
       name: sourcecode.FullName,
       line: sourcecode.Line
-  ): F[Unit]
+  ): IO[Unit]
 
   def trace(t: Throwable)(message: => String)(
       implicit
       name: sourcecode.FullName,
       line: sourcecode.Line
-  ): F[Unit]
+  ): IO[Unit]
 }
 
 object CustomizedLogger {
 
-  def apply[F[_]: Sync](logger: SelfAwareStructuredLogger[F]): CustomizedLogger[F] = {
+  def apply(
+      logger: SelfAwareStructuredLogger[IO],
+      context: Context
+  ): CustomizedLogger = {
 
-    val emptyCtx = Map.empty[String, String]
+    val emptyLogContext = Map.empty[String, String]
 
-    implicit class CtxSyntax[T](ctx: Map[String, String]) {
-      def withSource(
-          name: sourcecode.FullName,
-          line: sourcecode.Line
-      ): Map[String, String] = {
-        ctx.updated(LogKeys.source, s"${name.value} ${line.value}")
-      }
-    }
+    new SelfAwareStructuredLogger[IO] with CustomizedLogger with LoggerContext {
 
-    new SelfAwareStructuredLogger[F] with CustomizedLogger[F] {
+      override def isTraceEnabled: IO[Boolean] = logger.isTraceEnabled
 
-      override def isTraceEnabled: F[Boolean] = logger.isTraceEnabled
+      override def isDebugEnabled: IO[Boolean] = logger.isDebugEnabled
 
-      override def isDebugEnabled: F[Boolean] = logger.isDebugEnabled
+      override def isInfoEnabled: IO[Boolean] = logger.isInfoEnabled
 
-      override def isInfoEnabled: F[Boolean] = logger.isInfoEnabled
+      override def isWarnEnabled: IO[Boolean] = logger.isWarnEnabled
 
-      override def isWarnEnabled: F[Boolean] = logger.isWarnEnabled
+      override def isErrorEnabled: IO[Boolean] = logger.isErrorEnabled
 
-      override def isErrorEnabled: F[Boolean] = logger.isErrorEnabled
+      override def trace(ctx: Map[String, String])(msg: => String): IO[Unit] =
+        logger.trace(ctx)(msg)
 
-      override def trace(ctx: Map[String, String])(msg: => String): F[Unit] = logger.trace(ctx)(msg)
-
-      override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+      override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): IO[Unit] =
         logger.trace(ctx, t)(msg)
 
-      override def debug(ctx: Map[String, String])(msg: => String): F[Unit] = logger.debug(ctx)(msg)
+      override def debug(ctx: Map[String, String])(msg: => String): IO[Unit] =
+        logger.debug(ctx)(msg)
 
-      override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+      override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): IO[Unit] =
         logger.debug(ctx, t)(msg)
 
-      override def info(ctx: Map[String, String])(msg: => String): F[Unit] = logger.info(ctx)(msg)
+      override def info(ctx: Map[String, String])(msg: => String): IO[Unit] =
+        logger.info(ctx)(msg)
 
-      override def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+      override def info(ctx: Map[String, String], t: Throwable)(msg: => String): IO[Unit] =
         logger.info(ctx, t)(msg)
 
-      override def warn(ctx: Map[String, String])(msg: => String): F[Unit] = logger.warn(ctx)(msg)
+      override def warn(ctx: Map[String, String])(msg: => String): IO[Unit] =
+        logger.warn(ctx)(msg)
 
-      override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+      override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): IO[Unit] =
         logger.warn(ctx, t)(msg)
 
-      override def error(ctx: Map[String, String])(msg: => String): F[Unit] = logger.error(ctx)(msg)
+      override def error(ctx: Map[String, String])(msg: => String): IO[Unit] =
+        logger.error(ctx)(msg)
 
-      override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+      override def error(ctx: Map[String, String], t: Throwable)(msg: => String): IO[Unit] =
         logger.error(ctx, t)(msg)
 
-      override def error(message: => String): F[Unit] = logger.error(message)
+      override def error(message: => String): IO[Unit] =
+        logger.error(message)
 
-      override def warn(message: => String): F[Unit] = logger.warn(message)
+      override def warn(message: => String): IO[Unit] =
+        logger.warn(message)
 
-      override def info(message: => String): F[Unit] = logger.info(message)
+      override def info(message: => String): IO[Unit] =
+        logger.info(message)
 
-      override def debug(message: => String): F[Unit] = logger.debug(message)
+      override def debug(message: => String): IO[Unit] =
+        logger.debug(message)
 
-      override def trace(message: => String): F[Unit] = logger.trace(message)
+      override def trace(message: => String): IO[Unit] =
+        logger.trace(message)
 
-      override def error(t: Throwable)(message: => String): F[Unit] = logger.error(t)(message)
+      override def error(t: Throwable)(message: => String): IO[Unit] =
+        logger.error(t)(message)
 
-      override def warn(t: Throwable)(message: => String): F[Unit] = logger.warn(t)(message)
+      override def warn(t: Throwable)(message: => String): IO[Unit] =
+        logger.warn(t)(message)
 
-      override def info(t: Throwable)(message: => String): F[Unit] = logger.info(t)(message)
+      override def info(t: Throwable)(message: => String): IO[Unit] =
+        logger.info(t)(message)
 
-      override def debug(t: Throwable)(message: => String): F[Unit] = logger.debug(t)(message)
+      override def debug(t: Throwable)(message: => String): IO[Unit] =
+        logger.debug(t)(message)
 
-      override def trace(t: Throwable)(message: => String): F[Unit] = logger.trace(t)(message)
+      override def trace(t: Throwable)(message: => String): IO[Unit] =
+        logger.trace(t)(message)
 
       def trace(ctx: Map[String, String])(msg: => String)(
           implicit
           name: sourcecode.FullName,
           line: sourcecode.Line
-      ): F[Unit] = logger.trace(ctx.withSource(name, line))(msg)
+      ): IO[Unit] = for {
+        all <- context.getAll
+        _ <- logger.trace(
+          ctx
+            .withSource(name, line)
+            .withChatId(all)
+            .withTrackingId(all)
+        )(msg)
+      } yield ()
 
       def trace(ctx: Map[String, String], t: Throwable)(msg: => String)(
           implicit
           name: sourcecode.FullName,
           line: sourcecode.Line
-      ): F[Unit] = logger.trace(ctx.withSource(name, line), t)(msg)
+      ): IO[Unit] = for {
+        all <- context.getAll
+        _ <- logger.trace(
+          ctx
+            .withSource(name, line)
+            .withChatId(all)
+            .withTrackingId(all),
+          t
+        )(msg)
+      } yield ()
 
       def debug(ctx: Map[String, String])(msg: => String)(
           implicit
           name: sourcecode.FullName,
           line: sourcecode.Line
-      ): F[Unit] = logger.debug(ctx.withSource(name, line))(msg)
+      ): IO[Unit] = for {
+        all <- context.getAll
+        _ <- logger.debug(
+          ctx
+            .withSource(name, line)
+            .withChatId(all)
+            .withTrackingId(all)
+        )(msg)
+      } yield ()
 
       def debug(ctx: Map[String, String], t: Throwable)(msg: => String)(
           implicit
           name: sourcecode.FullName,
           line: sourcecode.Line
-      ): F[Unit] = logger.debug(ctx.withSource(name, line), t)(msg)
+      ): IO[Unit] = for {
+        all <- context.getAll
+        _ <- logger.debug(
+          ctx
+            .withSource(name, line)
+            .withChatId(all)
+            .withTrackingId(all),
+          t
+        )(msg)
+      } yield ()
 
       def info(ctx: Map[String, String])(msg: => String)(
           implicit
           name: sourcecode.FullName,
           line: sourcecode.Line
-      ): F[Unit] = logger.info(ctx.withSource(name, line))(msg)
+      ): IO[Unit] = for {
+        all <- context.getAll
+        _ <- logger.info(
+          ctx
+            .withSource(name, line)
+            .withChatId(all)
+            .withTrackingId(all)
+        )(msg)
+      } yield ()
 
       def info(ctx: Map[String, String], t: Throwable)(msg: => String)(
           implicit
           name: sourcecode.FullName,
           line: sourcecode.Line
-      ): F[Unit] = logger.info(ctx.withSource(name, line), t)(msg)
+      ): IO[Unit] = for {
+        all <- context.getAll
+        _ <- logger.info(
+          ctx
+            .withSource(name, line)
+            .withChatId(all)
+            .withTrackingId(all)
+        )(msg)
+      } yield ()
 
       def warn(ctx: Map[String, String])(msg: => String)(
           implicit
           name: sourcecode.FullName,
           line: sourcecode.Line
-      ): F[Unit] = logger.warn(ctx.withSource(name, line))(msg)
+      ): IO[Unit] = for {
+        all <- context.getAll
+        _ <- logger.warn(
+          ctx
+            .withSource(name, line)
+            .withChatId(all)
+            .withTrackingId(all)
+        )(msg)
+      } yield ()
 
       def warn(ctx: Map[String, String], t: Throwable)(msg: => String)(
           implicit
           name: sourcecode.FullName,
           line: sourcecode.Line
-      ): F[Unit] = logger.warn(ctx.withSource(name, line), t)(msg)
+      ): IO[Unit] = for {
+        all <- context.getAll
+        _ <- logger.warn(
+          ctx
+            .withSource(name, line)
+            .withChatId(all)
+            .withTrackingId(all),
+          t
+        )(msg)
+      } yield ()
 
       def error(ctx: Map[String, String])(msg: => String)(
           implicit
           name: sourcecode.FullName,
           line: sourcecode.Line
-      ): F[Unit] = logger.error(ctx.withSource(name, line))(msg)
+      ): IO[Unit] = for {
+        all <- context.getAll
+        _ <- logger.error(
+          ctx
+            .withSource(name, line)
+            .withChatId(all)
+            .withTrackingId(all)
+        )(msg)
+      } yield ()
 
       def error(ctx: Map[String, String], t: Throwable)(msg: => String)(
           implicit
           name: sourcecode.FullName,
           line: sourcecode.Line
-      ): F[Unit] = logger.error(ctx.withSource(name, line), t)(msg)
+      ): IO[Unit] = for {
+        all <- context.getAll
+        _ <- logger.error(
+          ctx
+            .withSource(name, line)
+            .withChatId(all)
+            .withTrackingId(all),
+          t
+        )(msg)
+      } yield ()
 
       def error(message: => String)(
           implicit
           name: sourcecode.FullName,
           line: sourcecode.Line
-      ): F[Unit] = logger.error(emptyCtx.withSource(name, line))(message)
+      ): IO[Unit] = for {
+        all <- context.getAll
+        _ <- logger.error(
+          emptyLogContext
+            .withSource(name, line)
+            .withChatId(all)
+            .withTrackingId(all)
+        )(message)
+      } yield ()
 
       def warn(message: => String)(
           implicit
           name: sourcecode.FullName,
           line: sourcecode.Line
-      ): F[Unit] = logger.warn(emptyCtx.withSource(name, line))(message)
+      ): IO[Unit] = for {
+        all <- context.getAll
+        _ <- logger.warn(
+          emptyLogContext
+            .withSource(name, line)
+            .withChatId(all)
+            .withTrackingId(all)
+        )(message)
+      } yield ()
 
       def info(message: => String)(
           implicit
           name: sourcecode.FullName,
           line: sourcecode.Line
-      ): F[Unit] = logger.info(emptyCtx.withSource(name, line))(message)
+      ): IO[Unit] = for {
+        all <- context.getAll
+        _ <- logger.info(
+          emptyLogContext
+            .withSource(name, line)
+            .withChatId(all)
+            .withTrackingId(all)
+        )(message)
+      } yield ()
 
       def debug(message: => String)(
           implicit
           name: sourcecode.FullName,
           line: sourcecode.Line
-      ): F[Unit] = logger.debug(emptyCtx.withSource(name, line))(message)
+      ): IO[Unit] = for {
+        all <- context.getAll
+        _ <- logger.debug(
+          emptyLogContext
+            .withSource(name, line)
+            .withChatId(all)
+            .withTrackingId(all)
+        )(message)
+      } yield ()
 
       def trace(message: => String)(
           implicit
           name: sourcecode.FullName,
           line: sourcecode.Line
-      ): F[Unit] = logger.trace(emptyCtx.withSource(name, line))(message)
+      ): IO[Unit] = for {
+        all <- context.getAll
+        _ <- logger.trace(
+          emptyLogContext
+            .withSource(name, line)
+            .withChatId(all)
+            .withTrackingId(all)
+        )(message)
+      } yield ()
 
       def error(t: Throwable)(message: => String)(
           implicit
           name: sourcecode.FullName,
           line: sourcecode.Line
-      ): F[Unit] = logger.error(emptyCtx.withSource(name, line), t)(message)
+      ): IO[Unit] = for {
+        all <- context.getAll
+        _ <- logger.error(
+          emptyLogContext
+            .withSource(name, line)
+            .withChatId(all)
+            .withTrackingId(all),
+          t
+        )(message)
+      } yield ()
 
       def warn(t: Throwable)(message: => String)(
           implicit
           name: sourcecode.FullName,
           line: sourcecode.Line
-      ): F[Unit] = logger.warn(emptyCtx.withSource(name, line), t)(message)
+      ): IO[Unit] = for {
+        all <- context.getAll
+        _ <- logger.warn(
+          emptyLogContext
+            .withSource(name, line)
+            .withChatId(all)
+            .withTrackingId(all),
+          t
+        )(message)
+      } yield ()
 
       def info(t: Throwable)(message: => String)(
           implicit
           name: sourcecode.FullName,
           line: sourcecode.Line
-      ): F[Unit] = logger.info(emptyCtx.withSource(name, line), t)(message)
+      ): IO[Unit] = for {
+        all <- context.getAll
+        _ <- logger.info(
+          emptyLogContext
+            .withSource(name, line)
+            .withChatId(all)
+            .withTrackingId(all),
+          t
+        )(message)
+      } yield ()
 
       def debug(t: Throwable)(message: => String)(
           implicit
           name: sourcecode.FullName,
           line: sourcecode.Line
-      ): F[Unit] = logger.debug(emptyCtx.withSource(name, line), t)(message)
+      ): IO[Unit] = for {
+        all <- context.getAll
+        _ <- logger.debug(
+          emptyLogContext
+            .withSource(name, line)
+            .withChatId(all)
+            .withTrackingId(all),
+          t
+        )(message)
+      } yield ()
 
       def trace(t: Throwable)(message: => String)(
           implicit
           name: sourcecode.FullName,
           line: sourcecode.Line
-      ): F[Unit] = logger.trace(emptyCtx.withSource(name, line), t)(message)
+      ): IO[Unit] = for {
+        all <- context.getAll
+        _ <- logger.trace(
+          emptyLogContext
+            .withSource(name, line)
+            .withChatId(all)
+            .withTrackingId(all),
+          t
+        )(message)
+      } yield ()
     }
   }
 }

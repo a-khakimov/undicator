@@ -1,4 +1,4 @@
-package org.github.ainr.conf
+package org.github.ainr.configurations
 
 import cats.effect.IO
 import cats.syntax.all._
@@ -7,12 +7,13 @@ import com.typesafe.config.ConfigFactory
 import lt.dvim.ciris.Hocon._
 import org.github.ainr.bot.conf.TelegramConfig
 
-final case class Config(
+final case class Configurations(
     telegram: TelegramConfig
 )
 
-object Config {
-  def load: IO[Config] = {
+object Configurations {
+
+  def load: IO[Configurations] = {
 
     val config = ConfigFactory.load("reference.conf")
 
@@ -24,7 +25,7 @@ object Config {
     ).mapN(TelegramConfig.apply)
 
     telegramConfig
-      .map(Config.apply)
+      .map(Configurations.apply)
       .load[IO]
   }
 }

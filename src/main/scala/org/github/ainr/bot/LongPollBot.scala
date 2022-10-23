@@ -4,19 +4,29 @@ import cats.effect.IO
 import cats.syntax.all._
 import org.github.ainr.bot.handler.Handler
 import org.github.ainr.bot.reaction.{Interpreter, Reaction, SendText, Sleep}
-import org.github.ainr.infrastructure.logger.CustomizedLogger
+import org.github.ainr.infrastructure.context.{Context, TrackingIdGen}
+import org.github.ainr.infrastructure.logger.{CustomizedLogger, LogKeys}
 import telegramium.bots.high.implicits.methodOps
-import telegramium.bots.high.{Api, LongPollBot, Methods}
+import telegramium.bots.high.{Api, Methods, LongPollBot => TelegramiumLongPollBot}
 import telegramium.bots.{ChatIntId, Message, ParseMode}
 
 object LongPollBot {
 
-  def make(api: Api[IO], handler: Handler)(logger: CustomizedLogger[IO]): LongPollBot[IO] = {
+  def make(
+      api: Api[IO],
+      handler: Handler
+  )(
+      context: Context,
+      logger: CustomizedLogger,
+      trackingId: TrackingIdGen
+  ): TelegramiumLongPollBot[IO] = {
 
-    new LongPollBot[IO](api) with Interpreter {
+    new TelegramiumLongPollBot[IO](api) with Interpreter {
 
       override def onMessage(msg: Message): IO[Unit] = {
         for {
+          _ <- trackingId.gen()
+          _ <- context.set(LogKeys.chatID, msg.chat.id.toString)
           reactions <- handler.handle(msg).recoverWith {
             case cause => logger.error(cause)("Something went wrong").as(Nil)
           }
@@ -42,11 +52,12 @@ object LongPollBot {
           chatId: ChatIntId,
           text: String,
           parseMode: Option[ParseMode] = None
-      ): IO[Unit] =
+      ): IO[Unit] = {
         Methods
           .sendMessage(chatId, text, parseMode)
           .exec(api)
           .void
+      }
     }
   }
 }
