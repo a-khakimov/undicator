@@ -17,7 +17,6 @@ object Context {
     IOLocal(Map.empty[String, String]).map {
       local =>
         new Context {
-
           override def set(key: String, value: String): IO[Unit] = for {
             current <- local.get.map(context => context.updated(key, value))
             _ <- local.set(current.updated(key, value))

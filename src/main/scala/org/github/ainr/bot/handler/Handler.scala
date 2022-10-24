@@ -15,22 +15,24 @@ object Handler {
 
   def apply(logger: CustomizedLogger): Handler = new Handler {
 
-    override def handle(message: Message): IO[List[Reaction]] = for {
-      _ <- logger.info(s"Message - ${message.text.getOrElse("Empty")}")
-      reactions <- IO.pure {
-        List(
-          SendText(
-            ChatIntId(message.chat.id),
-            message.text.getOrElse("Empty")
-          ),
-          Sleep(1 second),
-          SendText(
-            ChatIntId(message.chat.id),
-            message.text.getOrElse("Empty")
+    override def handle(message: Message): IO[List[Reaction]] = {
+      for {
+        _ <- logger.info(s"Message - ${message.text.getOrElse("Empty")}")
+        reactions <- IO.pure {
+          List(
+            SendText(
+              ChatIntId(message.chat.id),
+              message.text.getOrElse("Empty")
+            ),
+            Sleep(1 second),
+            SendText(
+              ChatIntId(message.chat.id),
+              message.text.getOrElse("Empty")
+            )
           )
-        )
-      }
-      _ <- logger.info(s"Sent reactions")
-    } yield reactions
+        }
+        _ <- logger.info(s"Sent reactions")
+      } yield reactions
+    }
   }
 }

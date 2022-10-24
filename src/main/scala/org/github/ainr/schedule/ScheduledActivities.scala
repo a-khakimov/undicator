@@ -10,32 +10,32 @@ import java.time.{LocalTime, ZoneId}
 import scala.concurrent.duration.DurationInt
 import scala.language.postfixOps
 
-trait ScheduledTasks {
+trait ScheduledActivities {
   def run: IO[Unit]
 }
 
-object ScheduledTasks {
+object ScheduledActivities {
 
-  def apply(tasks: List[Task])(
+  def apply(activities: List[Activity])(
       logger: CustomizedLogger,
       trackingId: TrackingIdGen
-  ): ScheduledTasks = {
+  ): ScheduledActivities = {
 
-    new ScheduledTasks {
+    new ScheduledActivities {
 
       override def run: IO[Unit] = {
-        tasks
+        activities
           .traverse {
-            case task: OneDayShotTask =>
+            case activity: OneDayShotActivity =>
               trackingId.gen() *> recovered {
-                checkTaskTime(task.startTime).flatMap {
-                  case moment: Boolean if moment => task.run
+                checkTaskTime(activity.startTime).flatMap {
+                  case moment: Boolean if moment => activity.run
                   case _                         => IO.unit
                 }
               }
-            case task: Task =>
+            case activity: Activity =>
               trackingId.gen() *> recovered {
-                task.run
+                activity.run
               }
           }
           .every(1 minute)

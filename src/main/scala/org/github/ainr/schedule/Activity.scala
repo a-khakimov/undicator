@@ -4,14 +4,14 @@ import cats.effect.IO
 
 import java.time.LocalTime
 
-trait Task {
+trait Activity {
 
   def run: IO[Unit]
 
   def name: String
 }
 
-trait OneDayShotTask extends Task {
+trait OneDayShotActivity extends Activity {
 
   def startTime: LocalTime
 

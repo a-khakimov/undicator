@@ -3,13 +3,14 @@ package org.github.ainr.bot
 import cats.effect.IO
 import org.github.ainr.bot.conf.TelegramConfig
 import org.github.ainr.bot.handler.Handler
+import org.github.ainr.bot.reaction.BotReactionsInterpreter
 import org.github.ainr.infrastructure.context.{Context, TrackingIdGen}
 import org.github.ainr.infrastructure.logger.CustomizedLogger
 import org.http4s.client.Client
 import telegramium.bots.high.{Api, BotApi, LongPollBot => TgLongPollBot}
 
 trait BotModule {
-  def longPollBot: TgLongPollBot[IO]
+  def bot: TgLongPollBot[IO] with BotReactionsInterpreter
 }
 
 object BotModule {
@@ -30,7 +31,7 @@ object BotModule {
 
     val handler: Handler = Handler(logger)
 
-    override def longPollBot: TgLongPollBot[IO] =
+    override val bot: TgLongPollBot[IO] with BotReactionsInterpreter =
       LongPollBot.make(botApi, handler)(context, logger, trackingIdGen)
   }
 }

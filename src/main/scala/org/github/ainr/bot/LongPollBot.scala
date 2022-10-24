@@ -3,7 +3,7 @@ package org.github.ainr.bot
 import cats.effect.IO
 import cats.syntax.all._
 import org.github.ainr.bot.handler.Handler
-import org.github.ainr.bot.reaction.{Interpreter, Reaction, SendText, Sleep}
+import org.github.ainr.bot.reaction.{BotReactionsInterpreter, Reaction, SendText, Sleep}
 import org.github.ainr.infrastructure.context.{Context, TrackingIdGen}
 import org.github.ainr.infrastructure.logger.{CustomizedLogger, LogKeys}
 import telegramium.bots.high.implicits.methodOps
@@ -19,9 +19,9 @@ object LongPollBot {
       context: Context,
       logger: CustomizedLogger,
       trackingId: TrackingIdGen
-  ): TelegramiumLongPollBot[IO] = {
+  ): TelegramiumLongPollBot[IO] with BotReactionsInterpreter = {
 
-    new TelegramiumLongPollBot[IO](api) with Interpreter {
+    new TelegramiumLongPollBot[IO](api) with BotReactionsInterpreter {
 
       override def onMessage(msg: Message): IO[Unit] = {
         for {

@@ -7,7 +7,7 @@ import org.github.ainr.bot.BotModule
 import org.github.ainr.configurations.Configurations
 import org.github.ainr.infrastructure.context.{Context, TrackingIdGen}
 import org.github.ainr.infrastructure.logger.CustomizedLogger
-import org.github.ainr.schedule.ScheduledTasksModule
+import org.github.ainr.schedule.ScheduledActivitiesModule
 import org.http4s
 import org.http4s.blaze.client.BlazeClientBuilder
 import org.typelevel.log4cats.LoggerName
@@ -36,11 +36,11 @@ object Main extends IOApp {
     _ <- resources.use { resource =>
       for {
         _ <- logger.info("Resources loaded")
-        scheduledTasksModule = ScheduledTasksModule.apply(logger, trackingIdGen)
-        _ <- resource.supervisor.supervise(scheduledTasksModule.scheduledTasks.run)
         botModule = BotModule(config.telegram, resource.httpClient)(context, logger, trackingIdGen)
+        scheduledTasksModule = ScheduledActivitiesModule.apply(logger, trackingIdGen, botModule.bot)
+        _ <- resource.supervisor.supervise(scheduledTasksModule.scheduledActivities.run)
         _ <- logger.info("App started")
-        _ <- botModule.longPollBot.start()
+        _ <- botModule.bot.start()
       } yield ()
     }
   } yield ExitCode.Success
