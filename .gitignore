@@ -1,0 +1,8 @@
+*.class
+*.log
+.bsp
+.idea
+project
+target
+.vscode
+.DS_Store
