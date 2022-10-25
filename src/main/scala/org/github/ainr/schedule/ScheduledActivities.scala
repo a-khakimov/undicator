@@ -49,8 +49,9 @@ object ScheduledActivities {
 
       private def checkTaskTime(time: LocalTime): IO[Boolean] = {
         for {
-          now <-
-            IO.delay(LocalTime.now(ZoneId.of("Asia/Yekaterinburg"))) // todo: make it configurable
+          now <- IO.delay {
+            LocalTime.now(ZoneId.of("Asia/Yekaterinburg")) // todo: make it configurable
+          }
           result = time.isAfter(now) && time.isBefore(now.plusMinutes(1))
         } yield result
       }

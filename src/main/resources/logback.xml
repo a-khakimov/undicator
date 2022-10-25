@@ -11,7 +11,6 @@
             <maxHistory>14</maxHistory>
             <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
-
     </appender>
     <appender name="App" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>app.log</file>

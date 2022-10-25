@@ -9,7 +9,8 @@ import scala.language.implicitConversions
 
 trait WithSleep[T] {
   def withSleep[F[_]: Applicative: Temporal](
-      duration: FiniteDuration,
+      duration: FiniteDuration
+  )(
       action: T => F[Unit]
   ): F[Unit]
 }
@@ -18,7 +19,8 @@ object WithSleep {
 
   implicit class withSleepForList[T](list: List[T]) extends WithSleep[T] {
     override def withSleep[F[_]: Applicative: Temporal](
-        duration: FiniteDuration,
+        duration: FiniteDuration
+    )(
         action: T => F[Unit]
     ): F[Unit] = list.foldLeft[F[Unit]](().pure[F]) {
       (prevG, i) =>
